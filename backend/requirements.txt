@@ -1,0 +1,36 @@
+# --- Core Backend Framework ---
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0    # ASGI server to run FastAPI
+pydantic>=2.6.0              # Data validation and serialization
+pydantic-settings>=2.1.0     # Advanced environment variable management (.env)
+
+# --- Database Drivers (Async) ---
+# MongoDB (SQL replacement)
+motor>=3.3.0                 # Async MongoDB driver (required for FastAPI)
+beanie>=1.25.0               # Modern ODM for MongoDB + FastAPI
+
+# Graph Database
+# neo4j>=5.17.0               # Official Neo4j Python driver
+
+# Vector Databases
+# qdrant-client>=1.7.0        # Client for Qdrant Vector Database
+# chromadb>=0.4.22            # (Optional) Enable if using Chroma instead of Qdrant
+
+# --- AI & RAG Orchestration ---
+# langchain>=0.1.0            # Core framework for chaining LLM components
+# langchain-community>=0.0.10 # Community integrations (web search, loaders, tools)
+# langchain-openai>=0.0.5     # OpenAI (GPT-3.5 / GPT-4) integration
+# langchain-core>=0.1.10
+# langgraph>=0.0.10           # IMPORTANT: Build agents, routers, and branching workflows
+
+# --- Embeddings & Tokenization ---
+# tiktoken>=0.5.2             # Token counter for OpenAI models (text chunking)
+
+# --- Web Search & External Tools ---
+# tavily-python>=0.3.0        # High-quality search API for AI applications
+# duckduckgo-search>=4.1.0    # (Optional) Free search alternative to Tavily
+
+# --- Utilities ---
+# python-dotenv>=1.0.1        # Load .env files (useful for research scripts)
+httpx>=0.26.0                # Async HTTP client (replacement for requests)
+tenacity>=8.2.3              # Automatic retries for unstable API/DB calls
