@@ -34,3 +34,4 @@ beanie>=1.25.0               # Modern ODM for MongoDB + FastAPI
 # python-dotenv>=1.0.1        # Load .env files (useful for research scripts)
 httpx>=0.26.0                # Async HTTP client (replacement for requests)
 tenacity>=8.2.3              # Automatic retries for unstable API/DB calls
+pydantic[email]
