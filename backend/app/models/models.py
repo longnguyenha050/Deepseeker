@@ -1,11 +1,30 @@
 from typing import Annotated, List, Optional
 from datetime import datetime
 from enum import Enum
-from beanie import Document, Link, Indexed
-from pydantic import Field, BaseModel, EmailStr
+
+# Import ConfigDict và to_camel để xử lý mapping tự động
+from pydantic import Field, BaseModel, EmailStr, ConfigDict
+from pydantic.alias_generators import to_camel
+
+from beanie import Document, Link, Indexed, PydanticObjectId
 from pymongo import IndexModel, ASCENDING, DESCENDING
 
+# ================= CONFIGURATION =================
+
+# Tạo một class cấu hình chung để tái sử dụng
+class BaseConfig:
+    """
+    Cấu hình này giúp Pydantic tự động map:
+    - Code Python: snake_case (created_at)
+    - MongoDB: camelCase (createdAt)
+    """
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True  # Cho phép dùng tên snake_case khi khởi tạo object
+    )
+
 # ================= ENUMS =================
+# (Giữ nguyên phần Enum của bạn)
 
 class UserRole(str, Enum):
     CUSTOMER = "customer"
@@ -57,16 +76,28 @@ class PostStatus(str, Enum):
 
 # ================= SHARED SCHEMAS =================
 
-class ImageInfo(BaseModel):
+# Kế thừa BaseConfig để ImageInfo cũng map public_id -> publicId
+class ImageInfo(BaseModel, BaseConfig):
     url: Optional[str] = None
     public_id: Optional[str] = None
 
 # ================= MODELS =================
 
-class User(Document):
+# Tạo class cha cho Document để không phải viết lại config nhiều lần
+class BaseDocument(Document, BaseConfig):
+    # Các field chung cho mọi document
+    id: Optional[PydanticObjectId] = Field(None, alias="_id")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Settings:
+        # Nếu muốn Beanie tự động bỏ qua field null khi save để tiết kiệm dung lượng
+        keep_nulls = False
+
+class User(BaseDocument):
     username: str = Field(lowercase=True, strip_whitespace=True)
     hashed_password: str = ""
-    email: Annotated[EmailStr, Indexed(unique=True)]
+    email: Annotated[str, Indexed(unique=True)]
     display_name: str = ""
     role: UserRole = UserRole.CUSTOMER
     avatar: Optional[ImageInfo] = None
@@ -76,26 +107,24 @@ class User(Document):
     auth_type: AuthType = AuthType.LOCAL
     reset_password_token: Optional[str] = None
     reset_password_expires: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    # created_at, updated_at đã có trong BaseDocument
 
     class Settings:
         name = "users"
 
-class Session(Document):
+class Session(BaseDocument):
     user_id: Annotated[Link[User], Indexed()]
     refresh_token: Annotated[str, Indexed(unique=True)]
     expires_at: datetime
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "sessions"
         indexes = [
-            IndexModel([("expires_at", ASCENDING)], expireAfterSeconds=0)
+            # LƯU Ý: Trong IndexModel phải dùng tên field camelCase (tên trong DB)
+            IndexModel([("expiresAt", ASCENDING)], expireAfterSeconds=0)
         ]
 
-class Address(Document):
+class Address(BaseDocument):
     is_default: bool
     street: str
     ward: str
@@ -103,13 +132,11 @@ class Address(Document):
     city: str
     country: str
     user_id: Link[User]
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "addresses"
 
-class Category(Document):
+class Category(BaseDocument):
     name: str = Field(strip_whitespace=True)
     slug: Annotated[str, Indexed(unique=True)]
     parent_id: Optional[Link["Category"]] = None
@@ -117,7 +144,7 @@ class Category(Document):
     class Settings:
         name = "categories"
 
-class Product(Document):
+class Product(BaseDocument):
     code: Annotated[str, Indexed(unique=True)]
     title: str = Field(strip_whitespace=True)
     slug: Annotated[str, Indexed(unique=True)]
@@ -125,33 +152,26 @@ class Product(Document):
     tag: List[str] = []
     category_id: Link[Category]
     avatar: ImageInfo
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "products"
 
-class ProductVariantImage(Document):
+class ProductVariantImage(BaseDocument):
     color: str
     product_id: Link[Product]
     avatar: Optional[ImageInfo] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "product_variant_images"
 
-class ProductVariant(Document):
+class ProductVariant(BaseDocument):
     sku: Optional[str] = None
     price: float = Field(default=0.0, ge=0)
     stock: int = Field(default=0, ge=0)
-    # FIX: Bỏ unique=True ở color/size lẻ, chỉ dùng compound index bên dưới
     color: str 
     size: str 
     product_id: Link[Product]
     product_variant_image_id: Optional[Link[ProductVariantImage]] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "product_variants"
@@ -161,14 +181,15 @@ class ProductVariant(Document):
                 unique=True,
                 sparse=True
             ),
+            # Field name trong index phải là camelCase: productId, productVariantImageId...
             IndexModel(
-                [("color", ASCENDING), ("size", ASCENDING), ("product_id", ASCENDING)],
+                [("color", ASCENDING), ("size", ASCENDING), ("productId", ASCENDING)],
                 unique=True,
-                partialFilterExpression={"sku": {"$ne": None}}
+                partialFilterExpression={"sku": {"$exists": True}}
             )
         ]
 
-class Promotion(Document):
+class Promotion(BaseDocument):
     code: Annotated[str, Indexed(unique=True)]
     description: str = ""
     discount_type: DiscountType
@@ -178,13 +199,11 @@ class Promotion(Document):
     active: PromotionStatus
     expired_at: datetime
     started_at: datetime = Field(default_factory=datetime.utcnow)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "promotions"
 
-class Order(Document):
+class Order(BaseDocument):
     order_number: Annotated[str, Indexed(unique=True)]
     status: OrderStatus = OrderStatus.PENDING
     shipping_fee: float = 30.0
@@ -199,38 +218,35 @@ class Order(Document):
     promotion_id: Optional[Link[Promotion]] = None
     user_id: Link[User]
     payment_method: PaymentMethod = PaymentMethod.COD
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "orders"
         indexes = [
+            # userId, promotionId (camelCase)
             IndexModel(
-                [("user_id", ASCENDING), ("promotion_id", ASCENDING)],
+                [("userId", ASCENDING), ("promotionId", ASCENDING)],
                 unique=True,
                 partialFilterExpression={
-                    "promotion_id": {"$exists": True},
+                    "promotionId": {"$gt": None},
                     "status": {"$in": ["pending", "paid", "processing", "shipped", "delivered"]}
                 }
             )
         ]
 
-class OrderItem(Document):
+class OrderItem(BaseDocument):
     order_id: Link[Order] 
     variant_id: Link[ProductVariant]
     quantity: int = Field(gt=0)
     price: float
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "order_items"
         indexes = [
-            # Unique kết hợp: Trong 1 order, mỗi variant chỉ xuất hiện 1 dòng
-            IndexModel([("order_id", ASCENDING), ("variant_id", ASCENDING)], unique=True)
+            # orderId, variantId (camelCase)
+            IndexModel([("orderId", ASCENDING), ("variantId", ASCENDING)], unique=True)
         ]
 
-class Review(Document):
+class Review(BaseDocument):
     user_id: Link[User]
     product_id: Link[Product]
     order_item_id: Annotated[Link[OrderItem], Indexed(unique=True)]
@@ -240,41 +256,38 @@ class Review(Document):
     size: Optional[str] = None
     likes: int = 0
     status: ReviewStatus = ReviewStatus.PENDING
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "reviews"
         indexes = [
-            IndexModel([("product_id", ASCENDING), ("created_at", DESCENDING)])
+            # productId, createdAt (camelCase)
+            IndexModel([("productId", ASCENDING), ("createdAt", DESCENDING)])
         ]
 
-class CartItem(Document):
+class CartItem(BaseDocument):
     variant_id: Link[ProductVariant]
     quantity: int = Field(gt=0)
     user_id: Link[User]
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "cart_items"
         indexes = [
-            IndexModel([("user_id", ASCENDING), ("variant_id", ASCENDING)], unique=True)
+            # userId, variantId (camelCase)
+            IndexModel([("userId", ASCENDING), ("variantId", ASCENDING)], unique=True)
         ]
 
-class Favourite(Document):
+class Favourite(BaseDocument):
     product_id: Link[Product]
     user_id: Link[User]
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "favourites"
         indexes = [
-            IndexModel([("user_id", ASCENDING), ("product_id", ASCENDING)], unique=True)
+             # userId, productId (camelCase)
+            IndexModel([("userId", ASCENDING), ("productId", ASCENDING)], unique=True)
         ]
 
-class Post(Document):
+class Post(BaseDocument):
     title: str = Field(strip_whitespace=True)
     slug: Annotated[str, Indexed(unique=True)]
     content: str
@@ -282,24 +295,21 @@ class Post(Document):
     category: PostCategory = PostCategory.PHOI_DO
     status: PostStatus = PostStatus.ACTIVE
     thumbnail: ImageInfo
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "posts"
 
-class Contact(Document):
+class Contact(BaseDocument):
     first_name: str = Field(strip_whitespace=True)
     last_name: str = Field(strip_whitespace=True)
     phone: str = Field(strip_whitespace=True)
     email: EmailStr
     message: str
     admin_note: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "contacts"
         indexes = [
-            IndexModel([("email", ASCENDING), ("created_at", DESCENDING)])
+            # createdAt (camelCase)
+            IndexModel([("email", ASCENDING), ("createdAt", DESCENDING)])
         ]

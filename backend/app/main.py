@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
+from typing import List
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import init_db
+from app.models.models import User
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -11,7 +13,6 @@ async def lifespan(app: FastAPI):
     yield
     pass
 
-# 2. Khởi tạo FastAPI
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
@@ -35,12 +36,7 @@ async def health_check():
         "database": "connected"
     }
 
-# Endpoint ví dụ lấy danh sách User để test model
-from app.models.models import User
-from typing import List
-
 @app.get("/users", response_model=List[User])
 async def get_users():
-    # Beanie query rất giống Mongo
     users = await User.find_all().to_list()
     return users
