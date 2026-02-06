@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import init_db
 from app.models.models import User
+from app.utils.schema_helper import get_all_schemas
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -40,3 +41,7 @@ async def health_check():
 async def get_users():
     users = await User.find_all().to_list()
     return users
+
+@app.get("/db_schema", response_model=str)
+async def get_db_schema():
+    return get_all_schemas()
