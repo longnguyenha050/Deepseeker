@@ -5,7 +5,10 @@ pydantic>=2.6.0              # Data validation and serialization
 pydantic-settings>=2.1.0     # Advanced environment variable management (.env)
 passlib[bcrypt]
 python-jose[cryptography]
-python-multipart"
+python-multipart
+litellm[proxy]
+langchain_openai
+pyyaml
 
 # --- Database Drivers (Async) ---
 # MongoDB (SQL replacement)

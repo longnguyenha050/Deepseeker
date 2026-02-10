@@ -1,0 +1,40 @@
+model_list:
+  - model_name: google-all-in-one
+    litellm_params:
+      model: gemini/gemini-2.5-flash-lite
+      api_key: ""
+
+  - model_name: llm_proxy
+    litellm_params:
+      model: gemini/gemini-3-flash-preview
+      api_key: ""
+
+  - model_name: llm_proxy
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: ""
+
+  - model_name: llm_proxy
+    litellm_params:
+      model: cerebras/llama-3.3-70b
+      api_key: "csk-"
+    
+  - model_name: llm_proxy
+    litellm_params:
+      model: cerebras/gpt-oss-120b
+      api_key: "csk-"
+
+  - model_name: llm_proxy
+    litellm_params:
+      model: cerebras/qwen-3-32b
+      api_key: "csk-"
+
+literellm_settings:
+  drop_params: true
+  json_logs: true
+
+router_settings:
+  routing_strategy: "simple-shuffle"
+  num_retries: 3
+  timeout: 10
+  cooldown_time: 60
