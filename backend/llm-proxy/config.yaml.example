@@ -1,51 +1,66 @@
-x-google-config: &google_auth   
+x-google-config: &google_auth 
   api_key: ""          
 
 x-cerebras-config: &cerebras_auth
   api_key: ""
 
-model_list:
-  - model_name: llm_proxy
-    litellm_params:
-      model: gemini/gemini-2.5-flash-lite
-      <<: *google_auth
+x-groq-config: &groq_auth
+  api_key: ""
 
-  - model_name: llm_proxy
+model_list:
+  # Fast models
+  - model_name: fast-model
     litellm_params:
       model: gemini/gemini-3-flash-preview
       <<: *google_auth
 
-  - model_name: llm_proxy
+  - model_name: fast-model
     litellm_params:
-      model: gemini/gemini-2.5-flash
+      model: gemini/gemini-2.5-flash-lite
       <<: *google_auth
 
-  - model_name: llm_proxy
-    litellm_params:
-      model: cerebras/llama-3.3-70b
-      <<: *cerebras_auth
-    
-  - model_name: llm_proxy
-    litellm_params:
-      model: cerebras/gpt-oss-120b
-      <<: *cerebras_auth
-
-  - model_name: llm_proxy
-    litellm_params:
-      model: cerebras/qwen-3-32b
-      <<: *cerebras_auth
-
-  - model_name: llm_proxy
+  - model_name: fast-model
     litellm_params:
       model: cerebras/llama3.1-8b
       <<: *cerebras_auth
 
-literellm_settings:
+  - model_name: fast-model
+    litellm_params:
+      model: groq/meta-llama/llama-4-scout-17b-16e-instruct
+      <<: *groq_auth
+
+  # Best models
+  - model_name: best-model
+    litellm_params:
+      model: cerebras/llama-3.3-70b
+      <<: *cerebras_auth
+    
+  - model_name: best-model
+    litellm_params:
+      model: cerebras/gpt-oss-120b
+      <<: *cerebras_auth
+
+  - model_name: best-model
+    litellm_params:
+      model: cerebras/qwen-3-32b
+      <<: *cerebras_auth
+
+  - model_name: best-model
+    litellm_params:
+      model: groq/meta-llama/llama-4-maverick-17b-128e-instruct
+      <<: *groq_auth
+
+  - model_name: best-model
+    litellm_params:
+      model: groq/openai/gpt-oss-120b
+      <<: *groq_auth
+
+litellm_settings:
   drop_params: true
   json_logs: true
 
 router_settings:
-  routing_strategy: "simple-shuffle"
+  routing_strategy: "simple-shuffle" # Sẽ xoay vòng các model trong cùng một model_name
   num_retries: 3
   timeout: 10
   cooldown_time: 60
