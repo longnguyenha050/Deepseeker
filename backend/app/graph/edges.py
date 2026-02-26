@@ -1,24 +1,24 @@
 from graph.state import GraphState
+from langgraph.types import Send
+from langchain_core.messages import HumanMessage
 
-def route_to_research(state: GraphState):
-    """
-    Quyết định: Tìm kiếm Web hay Generate luôn?
-    """
-    if state["web_search"] == "Yes":
-        return "web_search_node" # Tên node phải khớp trong workflow
-    return "generate"
+def route_to_agents(state: GraphState) -> list[Send]:
+    sends = []
 
-def check_hallucination(state: GraphState):
-    """
-    Quyết định: Câu trả lời có bịa không?
-    """
-    # Nếu lặp quá 3 lần -> Dừng lại để tiết kiệm tiền
-    if state["loop_step"] > 3:
-        return "end"
+    for i, c in enumerate(state["classifications"]):
+        sub_query = c["query"]
+        source = c["source"]
 
-    # score = hallucination_grader.invoke(...)
-    score = 0
-    if score.binary_score == "yes":
-        return "end" # Tốt -> Kết thúc
-    else:
-        return "generate" # Bịa -> Generate lại
+        base_state = {
+            "question": state["question"],
+            "query": sub_query,
+        }
+
+        if source == "mongodb_retriever":
+            base_state["messages"] = [
+                {"role": "user", "content": sub_query}
+            ]
+
+        sends.append(Send(source, base_state))
+
+    return sends

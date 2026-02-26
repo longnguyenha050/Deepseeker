@@ -21,7 +21,7 @@ beanie>=1.25.0               # Modern ODM for MongoDB + FastAPI
 
 # Vector Databases
 # qdrant-client>=1.7.0        # Client for Qdrant Vector Database
-# chromadb>=0.4.22            # (Optional) Enable if using Chroma instead of Qdrant
+chromadb>=0.4.22            # (Optional) Enable if using Chroma instead of Qdrant
 
 # --- AI & RAG Orchestration ---
 langchain>=0.1.0            # Core framework for chaining LLM components
@@ -29,13 +29,22 @@ langchain-community>=0.0.10 # Community integrations (web search, loaders, tools
 langchain-openai>=0.0.5     # OpenAI (GPT-3.5 / GPT-4) integration
 langchain-core>=0.1.10
 langgraph>=0.0.10           # IMPORTANT: Build agents, routers, and branching workflows
-langserve
+langchain-chroma
+pypdf 
+rank_bm25
+langchain-google-genai
+langchain-classic
+langchain_tavily
+langgraph-checkpoint-mongodb 
+langchain-mongodb
+
+sentence-transformers
 
 # --- Embeddings & Tokenization ---
 # tiktoken>=0.5.2             # Token counter for OpenAI models (text chunking)
 
 # --- Web Search & External Tools ---
-# tavily-python>=0.3.0        # High-quality search API for AI applications
+tavily-python>=0.3.0        # High-quality search API for AI applications
 # duckduckgo-search>=4.1.0    # (Optional) Free search alternative to Tavily
 
 # --- Utilities ---
