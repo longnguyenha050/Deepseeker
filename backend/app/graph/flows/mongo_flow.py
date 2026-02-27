@@ -1,10 +1,10 @@
-from graph.state import GraphState, MongoState
-from graph.nodes import *
+from app.graph.state import GraphState, MongoState
+from app.graph.nodes import *
 from langchain_mongodb.agent_toolkit import MONGODB_AGENT_SYSTEM_PROMPT
-from graph.retrievers.mongodb import MongoDBRetriever
-from graph.prompts.prompts import FORMAT_SYS
-from graph.llms import fast_llm, mql_llm, best_llm
-from core.config import settings
+from app.graph.retrievers.mongodb import MongoDBRetriever
+from app.graph.prompts.prompts import FORMAT_SYS
+from app.graph.llms import fast_llm, mql_llm, best_llm
+from app.core.config import settings
 
 mongo_retriever = MongoDBRetriever(best_llm)
 

@@ -1,7 +1,7 @@
 from langgraph.graph import END, StateGraph
-from graph.state import GraphState
-from graph.nodes import *
-from graph.edges import *
+from app.graph.state import GraphState
+from app.graph.nodes import *
+from app.graph.edges import *
 
 # 1. Khởi tạo Graph
 workflow = StateGraph(GraphState)
@@ -30,12 +30,12 @@ workflow.add_edge("internet_retriever", "generate")
 workflow.add_edge("generate", END)
 
 # 6. Compile và Chạy
-app = workflow.compile(debug=True)
+app_graph = workflow.compile(debug=True)
 
-if __name__ == "__main__":
-    result = app.invoke({
-        # "question": "What is the status of customer order #12345 and do we have any internal documentation on handling pending orders?",
-        "question": "Tổng số lượng hàng tồn kho của shop?",
-    })
-    print("==================================================")
-    print(result["generation"])  # In ra câu trả lời cuối cùng từ LLM sau khi tổng hợp thông tin từ các retriever
+# if __name__ == "__main__":
+#     result = app_workflow.invoke({
+#         # "question": "What is the status of customer order #12345 and do we have any internal documentation on handling pending orders?",
+#         "question": "Tổng số lượng hàng tồn kho của shop?",
+#     })
+#     print("==================================================")
+#     print(result["generation"])  # In ra câu trả lời cuối cùng từ LLM sau khi tổng hợp thông tin từ các retriever

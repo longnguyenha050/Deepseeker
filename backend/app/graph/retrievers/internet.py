@@ -2,7 +2,7 @@ from langchain_tavily import TavilySearch
 from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 from langchain_core.documents import Document
-from core.config import settings
+from app.core.config import settings
 
 class InternetRetriever:
     def __init__(self):
@@ -28,14 +28,7 @@ class InternetRetriever:
             url = result.get("url", "")
 
             documents.append(
-                Document(
-                    page_content=content,
-                    metadata={
-                        "title": title,
-                        "source": url,
-                        "type": "internet"
-                    }
-                )
+                content
             )
         compressed_docs = self.compressor.compress_documents(
         documents,

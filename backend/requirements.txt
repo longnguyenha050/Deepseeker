@@ -37,6 +37,7 @@ langchain-classic
 langchain_tavily
 langgraph-checkpoint-mongodb 
 langchain-mongodb
+langserve
 
 sentence-transformers
 

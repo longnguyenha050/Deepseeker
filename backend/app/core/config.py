@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     MONGO_URI: str
     MONGO_DB_NAME: str = "test"
 
-    DOC_DIRECTORY: str = "../../data/contextual_docs.json"
+    DOC_DIRECTORY: str = "../data/contextual_docs.json"
     RERANK_TOP_N: int = 3
 
     ALLOWED_COLLECTIONS: list = [
@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "text-embedding-3-small"
 
     model_config = SettingsConfigDict(
-        env_file="../.env",
+        env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"

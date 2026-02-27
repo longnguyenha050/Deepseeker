@@ -1,8 +1,8 @@
 from langchain_classic.retrievers import ContextualCompressionRetriever
 from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
-from utils.indexing import ContextualRAGBuilder
-from core.config import settings
+from app.utils.indexing import ContextualRAGBuilder
+from app.core.config import settings
 
 
 class VectorDBRetriever:

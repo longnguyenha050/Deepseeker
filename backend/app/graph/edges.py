@@ -1,4 +1,4 @@
-from graph.state import GraphState
+from app.graph.state import GraphState
 from langgraph.types import Send
 from langchain_core.messages import HumanMessage
 

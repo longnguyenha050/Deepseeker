@@ -7,12 +7,12 @@ from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph import END, StateGraph
 from typing import Literal
-from core.config import settings
-from graph.llms import fast_llm, mql_llm, best_llm
-from graph.prompts.prompts import ROUTER_SYSTEM_PROMPT, QUERY_TRANSLATION, ANSWER_SYNTHESIS_PROMPT
-from graph.retrievers.vectordb import VectorDBRetriever
-from graph.retrievers.internet import InternetRetriever
-from graph.flows.mongo_flow import build_mongo_app
+from app.core.config import settings
+from app.graph.llms import fast_llm, mql_llm, best_llm
+from app.graph.prompts.prompts import ROUTER_SYSTEM_PROMPT, QUERY_TRANSLATION, ANSWER_SYNTHESIS_PROMPT
+from app.graph.retrievers.vectordb import VectorDBRetriever
+from app.graph.retrievers.internet import InternetRetriever
+from app.graph.flows.mongo_flow import build_mongo_app
 
 
 
@@ -76,9 +76,10 @@ def vectordb_retriever(state: dict):
     print(f"Query: {query}")
 
     documents = vector_retriever.retrieve(query)
+    documents_text = [doc.page_content for doc in documents]
 
     return {
-        "documents": documents
+        "documents": documents_text
     }
 
 def internet_search_retriever(state: dict):
@@ -100,12 +101,7 @@ def mongodb_retriever(state: dict):
     })
 
     documents.append(
-            Document(
-                page_content=branch_result.get("messages", [])[-1].content,
-                metadata={
-                    "type": "mongodb"
-                }
-            )
+        branch_result.get("messages", [])[-1].content
         )
 
 
@@ -120,7 +116,7 @@ def generate(state: GraphState):
     documents = state.get("documents", [])
 
     docs_text = "\n\n".join(
-        doc.page_content for doc in documents
+        doc for doc in documents
     )
 
     prompt = ANSWER_SYNTHESIS_PROMPT.format(
