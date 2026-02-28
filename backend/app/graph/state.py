@@ -1,8 +1,7 @@
-from typing import List, Literal, Annotated
+from typing import Literal, Annotated
 from typing_extensions import TypedDict
 import operator
 from pydantic import BaseModel, Field
-from langchain_core.messages import BaseMessage
 
 class Classification(TypedDict):
     """A single routing decision: which agent to call with what query."""
