@@ -96,6 +96,9 @@ def mongodb_retriever(state: dict):
     # print ("MongoDB Retriever Result:", branch_result)
     return {"documents": documents}
 
+def greeting(state: dict):
+    print("---NODE: GREETING---")
+    return {"greeting": "Hello! How can I assist you today?"}
 
 def generate(state: GraphState):
     question = state.get("question", "")

@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class Classification(TypedDict):
     """A single routing decision: which agent to call with what query."""
-    source: Literal["mongodb_retriever", "internet_retriever", "vectordb_retriever"]
+    source: Literal["mongodb_retriever", "internet_retriever", "vectordb_retriever","greeting"]
     query: str
 
 class ClassificationResult(BaseModel):

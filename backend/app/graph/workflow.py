@@ -1,6 +1,6 @@
 from langgraph.graph import END, StateGraph
 from app.graph.state import GraphState
-from app.graph.nodes import classify_query, query_translation, vectordb_retriever, internet_search_retriever, mongodb_retriever, generate
+from app.graph.nodes import classify_query, query_translation, vectordb_retriever, internet_search_retriever, mongodb_retriever, greeting, generate
 from app.graph.edges import route_to_agents
 # from app.graph.nodes import *
 # from app.graph.edges import *
@@ -14,6 +14,7 @@ workflow.add_node("classify_query", classify_query)
 workflow.add_node("vectordb_retriever", vectordb_retriever)
 workflow.add_node("internet_retriever", internet_search_retriever)
 workflow.add_node("mongodb_retriever", mongodb_retriever)
+workflow.add_node("greeting", greeting)
 workflow.add_node("generate", generate)
 
 # 5. Thiết lập luồng đi
@@ -23,12 +24,12 @@ workflow.set_entry_point("classify_query")
 workflow.add_conditional_edges(
     "classify_query",
     route_to_agents,
-    ["mongodb_retriever", "vectordb_retriever", "internet_retriever"]
+    ["mongodb_retriever", "vectordb_retriever", "internet_retriever","greeting"]
 )
 workflow.add_edge("mongodb_retriever", "generate")
 workflow.add_edge("vectordb_retriever", "generate")
 workflow.add_edge("internet_retriever", "generate")
-
+workflow.add_edge("greeting", "generate")
 workflow.add_edge("generate", END)
 
 # 6. Compile và Chạy
