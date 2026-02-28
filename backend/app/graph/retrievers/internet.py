@@ -1,6 +1,7 @@
+import os
+
+from langchain_cohere import CohereRerank
 from langchain_tavily import TavilySearch
-from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
-from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 from langchain_core.documents import Document
 from app.core.config import settings
 
@@ -11,12 +12,10 @@ class InternetRetriever:
             max_results=10,
             topic="general",
         )
-        self.reranker = HuggingFaceCrossEncoder(
-            model_name="BAAI/bge-reranker-v2-m3"
-        )
 
-        self.compressor = CrossEncoderReranker(
-            model=self.reranker,
+        self.compressor = CohereRerank(
+            cohere_api_key=os.getenv("COHERE_API_KEY"), 
+            model="rerank-multilingual-v3.0",
             top_n=self.top_n
         )
     def retrieve(self, query: str):
@@ -27,11 +26,13 @@ class InternetRetriever:
             title = result.get("title", "")
             url = result.get("url", "")
 
-            documents.append(
-                content
+            # Tạo Document object với metadata (title, url)
+            doc = Document(
+                page_content=content,
+                metadata={"title": title, "url": url, "source": "internet"}
             )
-        compressed_docs = self.compressor.compress_documents(
-        documents,
-        query
-        )
+            documents.append(doc)
+        
+        # Compressor expects Document objects
+        compressed_docs = self.compressor.compress_documents(documents, query)
         return compressed_docs

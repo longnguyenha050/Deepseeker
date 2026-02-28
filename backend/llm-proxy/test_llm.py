@@ -22,7 +22,7 @@ for i in range(1, 5):
     try:
         import time
         start = time.time()
-        response = fast_llm.invoke(f"Hello, who are you?")
+        response = fast_llm.invoke("Hello, who are you?")
         print(f"\nLần {i}: - Time: {round((time.time()-start)*1000)} ms -- {response.content}")
         print("-" * 30)
     except Exception as e:
@@ -32,7 +32,7 @@ for i in range(1, 5):
     try:
         import time
         start = time.time()
-        response = best_llm.invoke(f"Hello, what is your model's architecture name? For example: gemini-2.5-flash")
+        response = best_llm.invoke("Hello, what is your model's architecture name? For example: gemini-2.5-flash")
         print(f"\nLần {i}: - Time: {round((time.time()-start)*1000)} ms -- {response.content}")
         print("-" * 30)
     except Exception as e:

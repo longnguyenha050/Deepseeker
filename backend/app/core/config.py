@@ -1,12 +1,13 @@
 from typing import List, Union
+
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import os
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Shate Shop RAG System"
     API_V1_STR: str = "/api/v1"
-    
+
     DEBUG: bool = False
 
     # --- DATABASE (MongoDB) ---
@@ -17,12 +18,11 @@ class Settings(BaseSettings):
     RERANK_TOP_N: int = 3
 
     ALLOWED_COLLECTIONS: list = [
-    # "orderitems",
-    "productvariants",
-    "products",
-    "promotions",
+        # "orderitems",
+        "productvariants",
+        "products",
+        "promotions",
     ]
-
 
     # --- SECURITY (JWT) ---
     SECRET_KEY: str
@@ -50,10 +50,8 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "text-embedding-3-small"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=True,
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )
+
 
 settings = Settings()

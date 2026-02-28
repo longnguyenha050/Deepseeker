@@ -38,8 +38,8 @@ langchain_tavily
 langgraph-checkpoint-mongodb 
 langchain-mongodb
 langserve
+langchain-cohere
 
-sentence-transformers
 
 # --- Embeddings & Tokenization ---
 # tiktoken>=0.5.2             # Token counter for OpenAI models (text chunking)

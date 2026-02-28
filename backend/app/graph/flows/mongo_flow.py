@@ -1,28 +1,34 @@
-from app.graph.state import GraphState, MongoState
-from app.graph.nodes import *
-from langchain_mongodb.agent_toolkit import MONGODB_AGENT_SYSTEM_PROMPT
-from app.graph.retrievers.mongodb import MongoDBRetriever
-from app.graph.prompts.prompts import FORMAT_SYS
-from app.graph.llms import fast_llm, mql_llm, best_llm
+import json
+from typing import Literal
+
 from app.core.config import settings
+from app.graph.llms import best_llm, fast_llm, mql_llm
+from app.graph.prompts.prompts import FORMAT_SYS
+from app.graph.retrievers.mongodb import MongoDBRetriever
+from app.graph.state import MongoState
+from langchain_core.messages import AIMessage
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_mongodb.agent_toolkit import MONGODB_AGENT_SYSTEM_PROMPT
+from langgraph.graph import StateGraph
 
 mongo_retriever = MongoDBRetriever(best_llm)
 
+
 def list_collections(state: dict):
     """Deterministic node to list only allowed collections"""
-    messages = state.get("messages", [])
-    call = {
-        "name": "mongodb_list_collections",
-        "args": {},
-        "id": "abc",
-        "type": "tool_call",
-    }
-    
+    # messages = state.get("messages", [])
+    # call = {
+    #     "name": "mongodb_list_collections",
+    #     "args": {},
+    #     "id": "abc",
+    #     "type": "tool_call",
+    # }
+
     summary = AIMessage(
         content=f"Available collections: {', '.join(settings.ALLOWED_COLLECTIONS)}"
     )
-    return {"messages": [ summary]}
-
+    return {"messages": [summary]}
 
 
 def call_get_schema(state: dict):
@@ -30,9 +36,7 @@ def call_get_schema(state: dict):
 
     call = {
         "name": "mongodb_schema",
-        "args": {
-            "collection_names": ", ".join(settings.ALLOWED_COLLECTIONS)
-        },
+        "args": {"collection_names": ", ".join(settings.ALLOWED_COLLECTIONS)},
         "id": "schema_call_1",
         "type": "tool_call",
     }
@@ -48,9 +52,12 @@ def generate_query(state: dict):
     """Generate MongoDB aggregation pipeline"""
     messages = state.get("messages", [])
     # print("messages get schema:", messages)
-    llm_with = mql_llm.bind_tools([mongo_retriever.tool_map["mongodb_query"]], tool_choice="mongodb_query")
+    llm_with = mql_llm.bind_tools(
+        [mongo_retriever.tool_map["mongodb_query"]], tool_choice="mongodb_query"
+    )
     resp = llm_with.invoke(
-        [{"role": "system", "content": MONGODB_AGENT_SYSTEM_PROMPT}] + state.get("messages", [])
+        [{"role": "system", "content": MONGODB_AGENT_SYSTEM_PROMPT}]
+        + state.get("messages", [])
     )
     # print("==================================================")
     # print(resp)
@@ -58,11 +65,14 @@ def generate_query(state: dict):
     print("messages after generate query:", [resp])
     return {"messages": [resp]}
 
+
 def check_query(state: dict):
     """Validate and sanitize generated query"""
     messages = state.get("messages", [])
     original = messages[-1].tool_calls[0]["args"]["query"]
-    resp = mql_llm.bind_tools([mongo_retriever.tool_map["mongodb_query"]], tool_choice="any").invoke(
+    resp = mql_llm.bind_tools(
+        [mongo_retriever.tool_map["mongodb_query"]], tool_choice="any"
+    ).invoke(
         [
             {"role": "system", "content": MONGODB_AGENT_SYSTEM_PROMPT},
             {"role": "user", "content": original},
@@ -91,18 +101,12 @@ def format_answer(state: dict):
 
     format_prompt = ChatPromptTemplate.from_template(FORMAT_SYS)
 
-
-    format_chain = (
-        format_prompt 
-        | fast_llm
-        | StrOutputParser() 
-    )
+    format_chain = format_prompt | fast_llm | StrOutputParser()
 
     response = format_chain.invoke({"question": question, "docs": docs_str})
 
-    return {
-        "messages": [AIMessage(content=response)]
-    }
+    return {"messages": [AIMessage(content=response)]}
+
 
 # def format_answer(state: dict):
 #     """Enhanced format function with large dataset handling"""
@@ -180,6 +184,7 @@ def need_checker(state: dict) -> Literal["generate_query", "check_query"]:
     """Conditional edge: run checker if tool call present"""
     messages = state.get("messages", [])
     return "check_query" if messages[-1].tool_calls else "generate_query"
+
 
 def build_mongo_app():
     mongo_retriever = MongoDBRetriever(mql_llm)
