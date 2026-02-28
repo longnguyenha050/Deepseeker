@@ -50,7 +50,7 @@ def call_get_schema(state: dict):
 
 def generate_query(state: dict):
     """Generate MongoDB aggregation pipeline"""
-    messages = state.get("messages", [])
+    # messages = state.get("messages", [])
     # print("messages get schema:", messages)
     llm_with = mql_llm.bind_tools(
         [mongo_retriever.tool_map["mongodb_query"]], tool_choice="mongodb_query"
@@ -61,8 +61,8 @@ def generate_query(state: dict):
     )
     # print("==================================================")
     # print(resp)
-    result = {"messages": messages + [resp]}
-    print("messages after generate query:", [resp])
+    # result = {"messages": messages + [resp]}
+    # print("messages after generate query:", [resp])
     return {"messages": [resp]}
 
 
@@ -70,12 +70,19 @@ def check_query(state: dict):
     """Validate and sanitize generated query"""
     messages = state.get("messages", [])
     original = messages[-1].tool_calls[0]["args"]["query"]
+    
+    # Convert JavaScript literals to Python syntax
+    # null → None, true → True, false → False
+    sanitized = original.replace("null", "None")
+    sanitized = sanitized.replace("true", "True")
+    sanitized = sanitized.replace("false", "False")
+    
     resp = mql_llm.bind_tools(
         [mongo_retriever.tool_map["mongodb_query"]], tool_choice="any"
     ).invoke(
         [
             {"role": "system", "content": MONGODB_AGENT_SYSTEM_PROMPT},
-            {"role": "user", "content": original},
+            {"role": "user", "content": sanitized},
         ]
     )
     resp.id = messages[-1].id
