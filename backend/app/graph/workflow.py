@@ -18,9 +18,9 @@ workflow.add_node("greeting", greeting)
 workflow.add_node("generate", generate)
 
 # 5. Thiết lập luồng đi
-# workflow.set_entry_point("query_translation")
-# workflow.add_edge("query_translation", "classify_query")
-workflow.set_entry_point("classify_query")
+workflow.set_entry_point("query_translation")
+workflow.add_edge("query_translation", "classify_query")
+# workflow.set_entry_point("classify_query")
 workflow.add_conditional_edges(
     "classify_query",
     route_to_agents,
