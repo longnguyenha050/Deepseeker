@@ -60,4 +60,4 @@ Thumbs.db
 *.log
 logs/
 
-config.yaml
+# config.yaml
